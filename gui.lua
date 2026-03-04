@@ -1,6 +1,9 @@
+-- Скрипт для ServerScriptService (или StarterGui)
+
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
 
 local function createMenuForPlayer(player)
     local playerGui = player:WaitForChild("PlayerGui")
@@ -9,6 +12,47 @@ local function createMenuForPlayer(player)
     if playerGui:FindFirstChild("AutoFarmMenu") then
         playerGui.AutoFarmMenu:Destroy()
     end
+
+    -- === ПРИВЕТСТВИЕ "BY SPOOKY" ===
+    local greetingGui = Instance.new("ScreenGui")
+    greetingGui.Name = "SpookyGreeting"
+    greetingGui.ResetOnSpawn = false
+    greetingGui.Parent = playerGui
+    greetingGui.IgnoreGuiInset = true
+    greetingGui.DisplayOrder = 1000
+    greetingGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+    -- Затемненный фон
+    local blackFrame = Instance.new("Frame")
+    blackFrame.Parent = greetingGui
+    blackFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    blackFrame.BackgroundTransparency = 0.5
+    blackFrame.Size = UDim2.new(1, 0, 1, 0)
+    blackFrame.ZIndex = 1000
+
+    -- Текст "by spooky"
+    local spookyText = Instance.new("TextLabel")
+    spookyText.Parent = greetingGui
+    spookyText.BackgroundTransparency = 1
+    spookyText.Size = UDim2.new(1, 0, 0, 100)
+    spookyText.Position = UDim2.new(0, 0, 0.5, -50)
+    spookyText.Text = "by spooky"
+    spookyText.TextColor3 = Color3.fromRGB(255, 200, 0)
+    spookyText.TextScaled = true
+    spookyText.Font = Enum.Font.GothamBold
+    spookyText.ZIndex = 1001
+
+    -- Анимация появления/исчезновения
+    spookyText.TextTransparency = 1
+    TweenService:Create(spookyText, TweenInfo.new(1), {TextTransparency = 0}):Play()
+    
+    task.wait(2)
+    
+    TweenService:Create(spookyText, TweenInfo.new(1), {TextTransparency = 1}):Play()
+    TweenService:Create(blackFrame, TweenInfo.new(1), {BackgroundTransparency = 1}):Play()
+    
+    task.wait(1)
+    greetingGui:Destroy()
 
     -- === ОСНОВНОЙ GUI ===
     local screenGui = Instance.new("ScreenGui")
@@ -27,14 +71,16 @@ local function createMenuForPlayer(player)
     local coinsList = {}
     local espConnections = {}
     local autoFarmConnection = nil
+    local rainbowConnection = nil
+    local isRainbowOn = false
 
-    -- === КНОПКА ДЛЯ ОТКРЫТИЯ (ПО ЦЕНТРУ СВЕРХУ) ===
+    -- === КНОПКА ДЛЯ ОТКРЫТИЯ ===
     local openButton = Instance.new("TextButton")
     openButton.Name = "OpenButton"
     openButton.Parent = screenGui
     openButton.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
     openButton.BackgroundTransparency = 0
-    openButton.BorderSizePixel = 0 -- Убираем рамку
+    openButton.BorderSizePixel = 0
     openButton.Size = UDim2.new(0, 100, 0, 40)
     openButton.Position = UDim2.new(0.5, -50, 0, 10)
     openButton.AnchorPoint = Vector2.new(0, 0)
@@ -48,17 +94,14 @@ local function createMenuForPlayer(player)
     openButton.ZIndex = 1000
     openButton.AutoButtonColor = false
 
-    -- Закругленные углы
     local openCorner = Instance.new("UICorner")
     openCorner.CornerRadius = UDim.new(0, 20)
     openCorner.Parent = openButton
 
-    -- Тень для открывашки (вместо квадратика)
     local openStroke = Instance.new("UIStroke")
     openStroke.Parent = openButton
     openStroke.Color = Color3.fromRGB(255, 255, 255)
     openStroke.Thickness = 2
-    openStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
     -- === ОСНОВНОЕ МЕНЮ ===
     local mainFrame = Instance.new("Frame")
@@ -66,9 +109,9 @@ local function createMenuForPlayer(player)
     mainFrame.Parent = screenGui
     mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     mainFrame.BackgroundTransparency = 0.05
-    mainFrame.BorderSizePixel = 0 -- Убираем рамку
-    mainFrame.Size = UDim2.new(0, 260, 0, 220)
-    mainFrame.Position = UDim2.new(0.5, -130, 0.5, -110)
+    mainFrame.BorderSizePixel = 0
+    mainFrame.Size = UDim2.new(0, 260, 0, 280) -- Уменьшил высоту
+    mainFrame.Position = UDim2.new(0.5, -130, 0.5, -140)
     mainFrame.Active = true
     mainFrame.Draggable = true
     mainFrame.Visible = true
@@ -78,30 +121,26 @@ local function createMenuForPlayer(player)
     mainCorner.CornerRadius = UDim.new(0, 12)
     mainCorner.Parent = mainFrame
 
-    -- Золотая обводка для меню
     local mainStroke = Instance.new("UIStroke")
     mainStroke.Parent = mainFrame
     mainStroke.Color = Color3.fromRGB(255, 200, 0)
     mainStroke.Thickness = 3
-    mainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
-    -- === КРЕСТИК (БЕЗ КВАДРАТИКА) ===
+    -- === КРЕСТИК ===
     local closeButton = Instance.new("TextButton")
     closeButton.Name = "CloseButton"
     closeButton.Parent = mainFrame
-    closeButton.BackgroundTransparency = 1 -- Полностью прозрачный фон
-    closeButton.BorderSizePixel = 0 -- Нет рамки
+    closeButton.BackgroundTransparency = 1
+    closeButton.BorderSizePixel = 0
     closeButton.Size = UDim2.new(0, 30, 0, 30)
     closeButton.Position = UDim2.new(1, -40, 0, 5)
     closeButton.Text = "✕"
-    closeButton.TextColor3 = Color3.fromRGB(255, 100, 100) -- Красноватый цвет
+    closeButton.TextColor3 = Color3.fromRGB(255, 100, 100)
     closeButton.TextScaled = true
     closeButton.Font = Enum.Font.GothamBold
     closeButton.ZIndex = 20
     closeButton.AutoButtonColor = false
-    closeButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255) -- Не используется из-за прозрачности
 
-    -- Эффект для крестика (меняем только цвет текста)
     closeButton.MouseEnter:Connect(function()
         TweenService:Create(closeButton, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(255, 0, 0)}):Play()
     end)
@@ -136,19 +175,17 @@ local function createMenuForPlayer(player)
     autoCorner.CornerRadius = UDim.new(0, 8)
     autoCorner.Parent = autoSection
 
-    -- Заголовок раздела
     local autoTitle = Instance.new("TextLabel")
     autoTitle.Parent = autoSection
     autoTitle.BackgroundTransparency = 1
     autoTitle.Size = UDim2.new(1, -10, 0, 20)
     autoTitle.Position = UDim2.new(0, 5, 0, 2)
-    autoTitle.Text = "🪙 AUTO COIN FARM" -- ИЗМЕНЕНО
+    autoTitle.Text = "🪙 AUTO COIN FARM"
     autoTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
     autoTitle.TextScaled = true
     autoTitle.Font = Enum.Font.GothamBold
     autoTitle.TextXAlignment = Enum.TextXAlignment.Left
 
-    -- Кнопка Auto Farm
     local autoButton = Instance.new("TextButton")
     autoButton.Name = "AutoFarmButton"
     autoButton.Parent = autoSection
@@ -156,7 +193,7 @@ local function createMenuForPlayer(player)
     autoButton.BorderSizePixel = 0
     autoButton.Size = UDim2.new(1, -10, 0, 28)
     autoButton.Position = UDim2.new(0, 5, 0, 25)
-    autoButton.Text = "🔴 AUTO FARM (OFF)" -- ИЗМЕНЕНО
+    autoButton.Text = "🔴 AUTO FARM (OFF)"
     autoButton.TextColor3 = Color3.fromRGB(255, 255, 255)
     autoButton.TextScaled = true
     autoButton.Font = Enum.Font.Gotham
@@ -165,13 +202,12 @@ local function createMenuForPlayer(player)
     autoButtonCorner.CornerRadius = UDim.new(0, 6)
     autoButtonCorner.Parent = autoButton
 
-    -- Счетчик монет
     local coinCounter = Instance.new("TextLabel")
     coinCounter.Parent = autoSection
     coinCounter.BackgroundTransparency = 1
     coinCounter.Size = UDim2.new(1, -10, 0, 18)
     coinCounter.Position = UDim2.new(0, 5, 0, 55)
-    coinCounter.Text = "Coins: 0" -- ИЗМЕНЕНО
+    coinCounter.Text = "Coins: 0"
     coinCounter.TextColor3 = Color3.fromRGB(255, 255, 0)
     coinCounter.TextScaled = true
     coinCounter.Font = Enum.Font.Gotham
@@ -189,7 +225,6 @@ local function createMenuForPlayer(player)
     espCorner.CornerRadius = UDim.new(0, 8)
     espCorner.Parent = espSection
 
-    -- Заголовок раздела
     local espTitle = Instance.new("TextLabel")
     espTitle.Parent = espSection
     espTitle.BackgroundTransparency = 1
@@ -201,7 +236,6 @@ local function createMenuForPlayer(player)
     espTitle.Font = Enum.Font.GothamBold
     espTitle.TextXAlignment = Enum.TextXAlignment.Left
 
-    -- Кнопка ESP
     local espButton = Instance.new("TextButton")
     espButton.Name = "ESPButton"
     espButton.Parent = espSection
@@ -217,6 +251,88 @@ local function createMenuForPlayer(player)
     local espButtonCorner = Instance.new("UICorner")
     espButtonCorner.CornerRadius = UDim.new(0, 6)
     espButtonCorner.Parent = espButton
+
+    -- === НОВЫЙ РАЗДЕЛ 3: OTHER ===
+    local otherSection = Instance.new("Frame")
+    otherSection.Parent = mainFrame
+    otherSection.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    otherSection.BackgroundTransparency = 0
+    otherSection.BorderSizePixel = 0
+    otherSection.Size = UDim2.new(1, -20, 0, 60)
+    otherSection.Position = UDim2.new(0, 10, 0, 210)
+
+    local otherCorner = Instance.new("UICorner")
+    otherCorner.CornerRadius = UDim.new(0, 8)
+    otherCorner.Parent = otherSection
+
+    local otherTitle = Instance.new("TextLabel")
+    otherTitle.Parent = otherSection
+    otherTitle.BackgroundTransparency = 1
+    otherTitle.Size = UDim2.new(1, -10, 0, 20)
+    otherTitle.Position = UDim2.new(0, 5, 0, 2)
+    otherTitle.Text = "🎮 OTHER"
+    otherTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    otherTitle.TextScaled = true
+    otherTitle.Font = Enum.Font.GothamBold
+    otherTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+    -- Кнопка RAINBOW ALL
+    local rainbowAllButton = Instance.new("TextButton")
+    rainbowAllButton.Name = "RainbowAllButton"
+    rainbowAllButton.Parent = otherSection
+    rainbowAllButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    rainbowAllButton.BorderSizePixel = 0
+    rainbowAllButton.Size = UDim2.new(1, -10, 0, 30)
+    rainbowAllButton.Position = UDim2.new(0, 5, 0, 25)
+    rainbowAllButton.Text = "🌈 RAINBOW ALL (OFF)"
+    rainbowAllButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    rainbowAllButton.TextScaled = true
+    rainbowAllButton.Font = Enum.Font.Gotham
+
+    local rainbowAllCorner = Instance.new("UICorner")
+    rainbowAllCorner.CornerRadius = UDim.new(0, 6)
+    rainbowAllCorner.Parent = rainbowAllButton
+
+    -- === ФУНКЦИИ ДЛЯ RAINBOW ALL ===
+    local function startRainbow()
+        isRainbowOn = true
+        rainbowAllButton.Text = "🌈 RAINBOW ALL (ON)"
+        rainbowAllButton.BackgroundColor3 = Color3.fromRGB(0, 120, 0)
+        
+        -- Запускаем радужный эффект для всего (кроме неба)
+        local hue = 0
+        rainbowConnection = RunService.RenderStepped:Connect(function()
+            hue = (hue + 0.002) % 1
+            local color = Color3.fromHSV(hue, 1, 1)
+            
+            -- Меняем цвет Ambient (окружающее освещение)
+            Lighting.Ambient = color
+            
+            -- Меняем цвет глобального освещения
+            Lighting.ColorShift_Top = color
+            Lighting.ColorShift_Bottom = color * 0.5
+            
+            -- Меняем яркость для эффекта
+            Lighting.Brightness = 0.8 + math.sin(hue * 10) * 0.2
+        end)
+    end
+
+    local function stopRainbow()
+        isRainbowOn = false
+        rainbowAllButton.Text = "🌈 RAINBOW ALL (OFF)"
+        rainbowAllButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        
+        if rainbowConnection then
+            rainbowConnection:Disconnect()
+            rainbowConnection = nil
+        end
+        
+        -- Возвращаем стандартное освещение
+        Lighting.Ambient = Color3.fromRGB(128, 128, 128)
+        Lighting.ColorShift_Top = Color3.fromRGB(255, 255, 255)
+        Lighting.ColorShift_Bottom = Color3.fromRGB(128, 128, 128)
+        Lighting.Brightness = 1
+    end
 
     -- === ФУНКЦИИ ДЛЯ ESP ===
     local function createESPForPlayer(targetPlayer)
@@ -319,17 +435,13 @@ local function createMenuForPlayer(player)
                 local character = player.Character
                 if character then
                     local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-                    local humanoid = character:FindFirstChild("Humanoid")
                     
-                    if humanoidRootPart and humanoid then
+                    if humanoidRootPart then
                         updateCoinsList()
                         local targetCoin = getNextCoin()
                         
                         if targetCoin then
-                            -- Сохраняем текущую ориентацию персонажа
                             local currentCFrame = humanoidRootPart.CFrame
-                            
-                            -- Телепортируемся выше монеты с сохранением направления
                             local newPosition = targetCoin.Position + Vector3.new(0, 8, 0)
                             humanoidRootPart.CFrame = CFrame.new(newPosition, newPosition + currentCFrame.LookVector)
                         end
@@ -369,6 +481,15 @@ local function createMenuForPlayer(player)
         end
     end)
 
+    -- RAINBOW ALL кнопка
+    rainbowAllButton.MouseButton1Click:Connect(function()
+        if isRainbowOn then
+            stopRainbow()
+        else
+            startRainbow()
+        end
+    end)
+
     -- ЗАКРЫТИЕ МЕНЮ
     closeButton.MouseButton1Click:Connect(function()
         isMenuOpen = false
@@ -376,8 +497,7 @@ local function createMenuForPlayer(player)
         openButton.Visible = true
         
         TweenService:Create(openButton, TweenInfo.new(0.3), {
-            Size = UDim2.new(0, 110, 0, 45),
-            Rotation = 0
+            Size = UDim2.new(0, 110, 0, 45)
         }):Play()
     end)
 
@@ -391,7 +511,11 @@ local function createMenuForPlayer(player)
     -- Эффекты для кнопок
     local function setupButtonEffects(btn, onColor, offColor)
         btn.MouseEnter:Connect(function()
-            if (btn == autoButton and isAutoFarming) or (btn == espButton and isESPEnabled) then return end
+            if (btn == autoButton and isAutoFarming) or 
+               (btn == espButton and isESPEnabled) or 
+               (btn == rainbowAllButton and isRainbowOn) then 
+                return 
+            end
             TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = onColor}):Play()
         end)
         
@@ -399,6 +523,8 @@ local function createMenuForPlayer(player)
             if btn == autoButton and isAutoFarming then
                 btn.BackgroundColor3 = Color3.fromRGB(0, 120, 0)
             elseif btn == espButton and isESPEnabled then
+                btn.BackgroundColor3 = Color3.fromRGB(0, 120, 0)
+            elseif btn == rainbowAllButton and isRainbowOn then
                 btn.BackgroundColor3 = Color3.fromRGB(0, 120, 0)
             else
                 btn.BackgroundColor3 = offColor
@@ -408,6 +534,7 @@ local function createMenuForPlayer(player)
 
     setupButtonEffects(autoButton, Color3.fromRGB(100, 100, 100), Color3.fromRGB(60, 60, 60))
     setupButtonEffects(espButton, Color3.fromRGB(100, 100, 100), Color3.fromRGB(60, 60, 60))
+    setupButtonEffects(rainbowAllButton, Color3.fromRGB(100, 100, 100), Color3.fromRGB(60, 60, 60))
     
     -- Эффекты для открывашки
     openButton.MouseEnter:Connect(function()
