@@ -1,6 +1,4 @@
--- СПООКИ ХАК - ESP С ИМЕНАМИ ИГРОКОВ
--- Вставь это в ServerScriptService
-
+-- СПООКИ ХАК - ПОЛНАЯ ВЕРСИЯ С ИСПРАВЛЕННЫМИ КНОПКАМИ
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -9,7 +7,7 @@ local RunService = game:GetService("RunService")
 
 local function createMenu(player)
     local playerGui = player:WaitForChild("PlayerGui")
-    
+
     -- Удаляем старое меню
     if playerGui:FindFirstChild("SpookyHack") then
         playerGui.SpookyHack:Destroy()
@@ -59,6 +57,8 @@ local function createMenu(player)
 
     -- === ПЕРЕМЕННЫЕ ===
     local selectedGame = "none"
+    
+    -- Для DPTB4
     local isAutoFarming = false
     local isESPEnabled = false
     local isESPEggsEnabled = false
@@ -72,6 +72,10 @@ local function createMenu(player)
     local rainbowConnection
     local coinsList = {}
     local currentCoinIndex = 0
+    
+    -- Для Naval
+    local isKillAuraOn = false
+    local killAuraConnection
 
     -- === КНОПКА ДЛЯ ОТКРЫТИЯ ===
     local openBtn = Instance.new("TextButton")
@@ -197,7 +201,7 @@ local function createMenu(player)
     scrollingContainer.BackgroundTransparency = 1
     scrollingContainer.Size = UDim2.new(1, -20, 1, -95)
     scrollingContainer.Position = UDim2.new(0, 10, 0, 85)
-    scrollingContainer.CanvasSize = UDim2.new(0, 0, 0, 550)
+    scrollingContainer.CanvasSize = UDim2.new(0, 0, 0, 600)
     scrollingContainer.ScrollBarThickness = 5
     scrollingContainer.ScrollBarImageColor3 = Color3.fromRGB(255, 200, 0)
     scrollingContainer.BorderSizePixel = 0
@@ -207,7 +211,7 @@ local function createMenu(player)
     gameScreen.Parent = scrollingContainer
     gameScreen.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
     gameScreen.BackgroundTransparency = 0
-    gameScreen.Size = UDim2.new(1, 0, 0, 140)
+    gameScreen.Size = UDim2.new(1, 0, 0, 190)
     gameScreen.Position = UDim2.new(0, 0, 0, 0)
     gameScreen.Visible = true
     gameScreen.BorderSizePixel = 0
@@ -244,12 +248,30 @@ local function createMenu(player)
     dptb4Corner.CornerRadius = UDim.new(0, 6)
     dptb4Corner.Parent = dptb4Btn
 
+    -- Кнопка Naval Warfare
+    local navalBtn = Instance.new("TextButton")
+    navalBtn.Parent = gameScreen
+    navalBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    navalBtn.BackgroundTransparency = 0
+    navalBtn.Size = UDim2.new(1, -20, 0, 40)
+    navalBtn.Position = UDim2.new(0, 10, 0, 90)
+    navalBtn.Text = "🚢 Naval Warfare"
+    navalBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    navalBtn.TextScaled = true
+    navalBtn.Font = Enum.Font.GothamBold
+    navalBtn.BorderSizePixel = 0
+    navalBtn.AutoButtonColor = false
+
+    local navalCorner = Instance.new("UICorner")
+    navalCorner.CornerRadius = UDim.new(0, 6)
+    navalCorner.Parent = navalBtn
+
     -- Текст для будущих игр
     local moreGamesText = Instance.new("TextLabel")
     moreGamesText.Parent = gameScreen
     moreGamesText.BackgroundTransparency = 1
     moreGamesText.Size = UDim2.new(1, -20, 0, 25)
-    moreGamesText.Position = UDim2.new(0, 10, 0, 90)
+    moreGamesText.Position = UDim2.new(0, 10, 0, 140)
     moreGamesText.Text = "More games coming soon..."
     moreGamesText.TextColor3 = Color3.fromRGB(150, 150, 150)
     moreGamesText.TextScaled = true
@@ -261,7 +283,7 @@ local function createMenu(player)
     mainScreen.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
     mainScreen.BackgroundTransparency = 0
     mainScreen.Size = UDim2.new(1, 0, 0, 400)
-    mainScreen.Position = UDim2.new(0, 0, 0, 150)
+    mainScreen.Position = UDim2.new(0, 0, 0, 200)
     mainScreen.Visible = false
     mainScreen.BorderSizePixel = 0
 
@@ -269,7 +291,7 @@ local function createMenu(player)
     mainScreenCorner.CornerRadius = UDim.new(0, 6)
     mainScreenCorner.Parent = mainScreen
 
-    -- Информация о выбранной игре (всегда видна)
+    -- Информация о выбранной игре
     local selectedLabel = Instance.new("TextLabel")
     selectedLabel.Name = "SelectedLabel"
     selectedLabel.Parent = mainScreen
@@ -281,25 +303,8 @@ local function createMenu(player)
     selectedLabel.TextScaled = true
     selectedLabel.Font = Enum.Font.Gotham
 
-    -- === ФУНКЦИЯ СОЗДАНИЯ КНОПОК ===
-    local function createButtons()
-        -- Очищаем старые кнопки
-        for _, child in ipairs(mainScreen:GetChildren()) do
-            if child.Name ~= "SelectedLabel" then
-                child:Destroy()
-            end
-        end
-        
-        -- Если игра не выбрана - показываем только текст
-        if selectedGame == "none" then
-            selectedLabel.Text = "No game selected. Go to GAME tab."
-            return
-        end
-        
-        -- Обновляем текст выбранной игры
-        selectedLabel.Text = "🎮 Don't Press The Button 4"
-        
-        -- Создаем кнопки
+    -- === ФУНКЦИЯ ДЛЯ СОЗДАНИЯ КНОПОК DPTB4 ===
+    local function createDPTB4Buttons()
         local yPos = 45
         
         -- AUTO FARM
@@ -502,21 +507,13 @@ local function createMenu(player)
         rainbowCorner.CornerRadius = UDim.new(0, 5)
         rainbowCorner.Parent = rainbowBtn
 
-        -- === ФУНКЦИИ ДЛЯ AUTO FARM ===
+        -- === ФУНКЦИИ ДЛЯ DPTB4 ===
         local function updateCoins()
             coinsList = {}
-            -- Ищем монеты по разным возможным названиям
             for _, obj in ipairs(workspace:GetDescendants()) do
                 if obj:IsA("BasePart") then
                     local name = obj.Name:lower()
-                    -- Проверяем разные варианты названий монет
-                    if name == "coin" or 
-                       name:find("coin") or 
-                       name == "money" or 
-                       name:find("money") or
-                       name == "gem" or
-                       name:find("gem") or
-                       name:find("collectible") then
+                    if name == "coin" or name:find("coin") or name == "money" or name:find("money") or name == "gem" or name:find("gem") or name:find("collectible") then
                         table.insert(coinsList, obj)
                     end
                 end
@@ -525,31 +522,18 @@ local function createMenu(player)
         end
 
         local function getNextCoin()
-            if #coinsList == 0 then
-                return nil
-            end
-            
+            if #coinsList == 0 then return nil end
             currentCoinIndex = currentCoinIndex + 1
-            if currentCoinIndex > #coinsList then
-                currentCoinIndex = 1
-            end
-            
+            if currentCoinIndex > #coinsList then currentCoinIndex = 1 end
             local coin = coinsList[currentCoinIndex]
-            if coin and coin.Parent then
-                return coin
-            else
-                updateCoins()
-                return getNextCoin()
-            end
+            if coin and coin.Parent then return coin else updateCoins() return getNextCoin() end
         end
 
-        -- AUTO FARM обработчик
         autoBtn.MouseButton1Click:Connect(function()
             isAutoFarming = not isAutoFarming
             if isAutoFarming then
                 autoBtn.Text = "🟢 AUTO FARM (ON)"
                 autoBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 0)
-                
                 autoFarmConnection = task.spawn(function()
                     while isAutoFarming do
                         local char = player.Character
@@ -559,7 +543,6 @@ local function createMenu(player)
                                 local targetCoin = getNextCoin()
                                 if targetCoin then
                                     local hrp = char.HumanoidRootPart
-                                    -- Телепортируемся выше монеты
                                     hrp.CFrame = CFrame.new(targetCoin.Position + Vector3.new(0, 8, 0))
                                 end
                             end
@@ -570,18 +553,13 @@ local function createMenu(player)
             else
                 autoBtn.Text = "🔴 AUTO FARM (OFF)"
                 autoBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-                if autoFarmConnection then
-                    task.cancel(autoFarmConnection)
-                    autoFarmConnection = nil
-                end
+                if autoFarmConnection then task.cancel(autoFarmConnection) autoFarmConnection = nil end
             end
         end)
 
-        -- === НОВАЯ ФУНКЦИЯ: СОЗДАНИЕ ESP С ИМЕНАМИ ===
+        -- ESP PLAYER
         local function createPlayerESP(targetPlayer)
             if targetPlayer == player then return end
-            
-            -- Создаем BillboardGui с именем
             local billboard = Instance.new("BillboardGui")
             billboard.Name = "ESP_" .. targetPlayer.Name
             billboard.Parent = gui
@@ -589,19 +567,14 @@ local function createMenu(player)
             billboard.Size = UDim2.new(0, 100, 0, 30)
             billboard.StudsOffset = Vector3.new(0, 3, 0)
             billboard.AlwaysOnTop = true
-            
-            -- Фон для имени
             local background = Instance.new("Frame")
             background.Parent = billboard
             background.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
             background.BackgroundTransparency = 0.3
             background.Size = UDim2.new(1, 0, 1, 0)
-            
             local bgCorner = Instance.new("UICorner")
             bgCorner.CornerRadius = UDim.new(0, 4)
             bgCorner.Parent = background
-            
-            -- Текст с именем
             local nameLabel = Instance.new("TextLabel")
             nameLabel.Parent = billboard
             nameLabel.BackgroundTransparency = 1
@@ -610,8 +583,6 @@ local function createMenu(player)
             nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
             nameLabel.TextScaled = true
             nameLabel.Font = Enum.Font.GothamBold
-            
-            -- Highlight для подсветки
             local highlight = Instance.new("Highlight")
             highlight.Name = "Highlight_" .. targetPlayer.Name
             highlight.Parent = gui
@@ -620,64 +591,35 @@ local function createMenu(player)
             highlight.FillTransparency = 0.4
             highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
             highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-            
-            -- Сохраняем все в таблицу
-            table.insert(espConnections, {
-                player = targetPlayer,
-                billboard = billboard,
-                highlight = highlight
-            })
-            
-            -- Обновляем при смене персонажа
+            table.insert(espConnections, {player = targetPlayer, billboard = billboard, highlight = highlight})
             targetPlayer.CharacterAdded:Connect(function(char)
                 task.wait(0.5)
                 local head = char:FindFirstChild("Head")
-                if head and billboard then
-                    billboard.Adornee = head
-                end
-                if highlight then
-                    highlight.Adornee = char
-                end
+                if head and billboard then billboard.Adornee = head end
+                if highlight then highlight.Adornee = char end
             end)
         end
 
-        -- ESP PLAYER обработчик (ОБНОВЛЕННЫЙ)
         espBtn.MouseButton1Click:Connect(function()
             isESPEnabled = not isESPEnabled
             if isESPEnabled then
                 espBtn.Text = "⚪ ESP PLAYER (ON)"
                 espBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 0)
-                
-                -- Создаем ESP для всех игроков
                 for _, other in ipairs(Players:GetPlayers()) do
                     createPlayerESP(other)
                 end
-                
-                -- Следим за новыми игроками
                 local connection = Players.PlayerAdded:Connect(function(newPlayer)
                     task.wait(1)
-                    if isESPEnabled then
-                        createPlayerESP(newPlayer)
-                    end
+                    if isESPEnabled then createPlayerESP(newPlayer) end
                 end)
-                
                 table.insert(espConnections, {connection = connection})
-                
             else
                 espBtn.Text = "⚪ ESP PLAYER (OFF)"
                 espBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-                
-                -- Удаляем все ESP
                 for _, data in ipairs(espConnections) do
-                    if data.connection then
-                        data.connection:Disconnect()
-                    end
-                    if data.billboard then
-                        data.billboard:Destroy()
-                    end
-                    if data.highlight then
-                        data.highlight:Destroy()
-                    end
+                    if data.connection then data.connection:Disconnect() end
+                    if data.billboard then data.billboard:Destroy() end
+                    if data.highlight then data.highlight:Destroy() end
                 end
                 espConnections = {}
             end
@@ -689,21 +631,15 @@ local function createMenu(player)
                 isESPEggsEnabled = false
                 espEggsBtn.Text = "🥚 ESP EGGS (OFF)"
                 espEggsBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-                
                 for _, data in ipairs(espEggsConnections) do
-                    if data.connection then
-                        data.connection:Disconnect()
-                    end
-                    if data.highlight then
-                        data.highlight:Destroy()
-                    end
+                    if data.connection then data.connection:Disconnect() end
+                    if data.highlight then data.highlight:Destroy() end
                 end
                 espEggsConnections = {}
             else
                 isESPEggsEnabled = true
                 espEggsBtn.Text = "🥚 ESP EGGS (ON)"
                 espEggsBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 0)
-                
                 for _, obj in ipairs(workspace:GetDescendants()) do
                     if obj:IsA("BasePart") and string.lower(obj.Name):find("egg") then
                         local highlight = Instance.new("Highlight")
@@ -713,14 +649,9 @@ local function createMenu(player)
                         highlight.FillTransparency = 0.3
                         highlight.OutlineColor = Color3.fromRGB(0, 150, 255)
                         highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-                        
-                        table.insert(espEggsConnections, {
-                            obj = obj,
-                            highlight = highlight
-                        })
+                        table.insert(espEggsConnections, {obj = obj, highlight = highlight})
                     end
                 end
-                
                 local connection = workspace.DescendantAdded:Connect(function(obj)
                     if isESPEggsEnabled and obj:IsA("BasePart") and string.lower(obj.Name):find("egg") then
                         task.wait(0.1)
@@ -731,14 +662,9 @@ local function createMenu(player)
                         highlight.FillTransparency = 0.3
                         highlight.OutlineColor = Color3.fromRGB(0, 150, 255)
                         highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-                        
-                        table.insert(espEggsConnections, {
-                            obj = obj,
-                            highlight = highlight
-                        })
+                        table.insert(espEggsConnections, {obj = obj, highlight = highlight})
                     end
                 end)
-                
                 table.insert(espEggsConnections, {connection = connection})
             end
         end)
@@ -749,7 +675,6 @@ local function createMenu(player)
             if isInfJump then
                 infJumpBtn.Text = "🦘 INF JUMP (ON)"
                 infJumpBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 0)
-                
                 infJumpConnection = UserInputService.JumpRequest:Connect(function()
                     local char = player.Character
                     if char and char:FindFirstChild("Humanoid") then
@@ -759,10 +684,7 @@ local function createMenu(player)
             else
                 infJumpBtn.Text = "🦘 INF JUMP (OFF)"
                 infJumpBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-                if infJumpConnection then
-                    infJumpConnection:Disconnect()
-                    infJumpConnection = nil
-                end
+                if infJumpConnection then infJumpConnection:Disconnect() infJumpConnection = nil end
             end
         end)
 
@@ -792,7 +714,6 @@ local function createMenu(player)
             if isRainbowOn then
                 rainbowBtn.Text = "🌈 RAINBOW ALL (ON)"
                 rainbowBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 0)
-                
                 local hue = 0
                 rainbowConnection = RunService.RenderStepped:Connect(function()
                     hue = (hue + 0.002) % 1
@@ -804,10 +725,7 @@ local function createMenu(player)
             else
                 rainbowBtn.Text = "🌈 RAINBOW ALL (OFF)"
                 rainbowBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-                if rainbowConnection then
-                    rainbowConnection:Disconnect()
-                    rainbowConnection = nil
-                end
+                if rainbowConnection then rainbowConnection:Disconnect() rainbowConnection = nil end
                 Lighting.Ambient = Color3.fromRGB(128, 128, 128)
                 Lighting.ColorShift_Top = Color3.fromRGB(255, 255, 255)
                 Lighting.ColorShift_Bottom = Color3.fromRGB(128, 128, 128)
@@ -834,28 +752,202 @@ local function createMenu(player)
         hover(rainbowBtn)
     end
 
+    -- === ФУНКЦИЯ ДЛЯ СОЗДАНИЯ КНОПОК NAVAL ===
+    local function createNavalButtons()
+        local yPos = 45
+        
+        -- KILL AURA
+        local killSection = Instance.new("Frame")
+        killSection.Parent = mainScreen
+        killSection.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+        killSection.BackgroundTransparency = 0
+        killSection.Size = UDim2.new(1, -20, 0, 65)
+        killSection.Position = UDim2.new(0, 10, 0, yPos)
+        killSection.BorderSizePixel = 0
+
+        local killCorner = Instance.new("UICorner")
+        killCorner.CornerRadius = UDim.new(0, 6)
+        killCorner.Parent = killSection
+
+        local killTitle = Instance.new("TextLabel")
+        killTitle.Parent = killSection
+        killTitle.BackgroundTransparency = 1
+        killTitle.Size = UDim2.new(1, -10, 0, 18)
+        killTitle.Position = UDim2.new(0, 5, 0, 2)
+        killTitle.Text = "💀 KILL AURA"
+        killTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+        killTitle.TextScaled = true
+        killTitle.Font = Enum.Font.GothamBold
+        killTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+        local killBtn = Instance.new("TextButton")
+        killBtn.Name = "KillAuraButton"
+        killBtn.Parent = killSection
+        killBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+        killBtn.BackgroundTransparency = 0
+        killBtn.Size = UDim2.new(1, -10, 0, 25)
+        killBtn.Position = UDim2.new(0, 5, 0, 22)
+        killBtn.Text = "💀 KILL AURA (OFF)"
+        killBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        killBtn.TextScaled = true
+        killBtn.Font = Enum.Font.Gotham
+        killBtn.BorderSizePixel = 0
+        killBtn.AutoButtonColor = false
+
+        local killBtnCorner = Instance.new("UICorner")
+        killBtnCorner.CornerRadius = UDim.new(0, 5)
+        killBtnCorner.Parent = killBtn
+
+        -- === ФУНКЦИИ ДЛЯ NAVAL ===
+        local function findM1Garand()
+            local char = player.Character
+            if not char then return nil end
+            for _, tool in ipairs(char:GetChildren()) do
+                if tool:IsA("Tool") and tool.Name == "M1 Garand" then
+                    return tool
+                end
+            end
+            return nil
+        end
+
+        local function startKillAura()
+            isKillAuraOn = true
+            killBtn.Text = "💀 KILL AURA (ON)"
+            killBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 0)
+            
+            killAuraConnection = RunService.Heartbeat:Connect(function()
+                if not isKillAuraOn then return end
+                
+                local char = player.Character
+                if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+                
+                local myTeam = player.Team
+                local closestEnemy = nil
+                local closestDist = 100
+                
+                for _, other in ipairs(Players:GetPlayers()) do
+                    if other ~= player and other.Character and other.Character:FindFirstChild("HumanoidRootPart") then
+                        if other.Team ~= myTeam then
+                            local dist = (char.HumanoidRootPart.Position - other.Character.HumanoidRootPart.Position).Magnitude
+                            if dist < closestDist then
+                                closestDist = dist
+                                closestEnemy = other
+                            end
+                        end
+                    end
+                end
+                
+                if closestEnemy then
+                    char.HumanoidRootPart.CFrame = CFrame.lookAt(
+                        char.HumanoidRootPart.Position,
+                        closestEnemy.Character.HumanoidRootPart.Position
+                    )
+                    
+                    local garand = findM1Garand()
+                    if garand then
+                        pcall(function()
+                            garand:Activate()
+                        end)
+                    end
+                end
+            end)
+        end
+
+        local function stopKillAura()
+            isKillAuraOn = false
+            killBtn.Text = "💀 KILL AURA (OFF)"
+            killBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+            if killAuraConnection then
+                killAuraConnection:Disconnect()
+                killAuraConnection = nil
+            end
+        end
+
+        killBtn.MouseButton1Click:Connect(function()
+            if selectedGame ~= "naval" then
+                killBtn.Text = "❌ SELECT GAME FIRST!"
+                killBtn.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
+                task.wait(1)
+                killBtn.Text = "💀 KILL AURA (OFF)"
+                killBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+                return
+            end
+            
+            if isKillAuraOn then
+                stopKillAura()
+            else
+                startKillAura()
+            end
+        end)
+
+        local function hover(btn)
+            btn.MouseEnter:Connect(function()
+                if btn.BackgroundColor3 == Color3.fromRGB(0, 120, 0) then return end
+                TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(90, 90, 90)}):Play()
+            end)
+            btn.MouseLeave:Connect(function()
+                if btn.BackgroundColor3 == Color3.fromRGB(0, 120, 0) then return end
+                btn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+            end)
+        end
+
+        hover(killBtn)
+    end
+
+    -- === ФУНКЦИЯ ДЛЯ ОЧИСТКИ И СОЗДАНИЯ КНОПОК ===
+    local function createButtons()
+        -- Очищаем старые кнопки
+        for _, child in ipairs(mainScreen:GetChildren()) do
+            if child.Name ~= "SelectedLabel" then
+                child:Destroy()
+            end
+        end
+        
+        if selectedGame == "none" then
+            selectedLabel.Text = "No game selected. Go to GAME tab."
+            return
+        end
+        
+        if selectedGame == "dptb4" then
+            selectedLabel.Text = "🎮 Don't Press The Button 4"
+            createDPTB4Buttons()
+        elseif selectedGame == "naval" then
+            selectedLabel.Text = "🚢 Naval Warfare"
+            createNavalButtons()
+        end
+    end
+
     -- === ОБРАБОТЧИКИ ===
 
-    -- Выбор игры
+    -- Выбор игры DPTB4
     dptb4Btn.MouseButton1Click:Connect(function()
         selectedGame = "dptb4"
-        
-        -- Переключаем на MAIN и создаем кнопки
         gameScreen.Visible = false
         mainScreen.Visible = true
         createButtons()
-        
-        -- Обновляем цвета кнопок
         gameBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
         gameBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
         mainBtn.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
         mainBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
-        
-        -- Визуальный эффект на кнопке игры
         dptb4Btn.BackgroundColor3 = Color3.fromRGB(0, 120, 0)
         task.wait(0.2)
         dptb4Btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-        
+        scrollingContainer.CanvasPosition = Vector2.new(0, 0)
+    end)
+
+    -- Выбор игры Naval
+    navalBtn.MouseButton1Click:Connect(function()
+        selectedGame = "naval"
+        gameScreen.Visible = false
+        mainScreen.Visible = true
+        createButtons()
+        gameBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+        gameBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        mainBtn.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
+        mainBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+        navalBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 0)
+        task.wait(0.2)
+        navalBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
         scrollingContainer.CanvasPosition = Vector2.new(0, 0)
     end)
 
@@ -878,8 +970,6 @@ local function createMenu(player)
         gameBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
         gameBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
         scrollingContainer.CanvasPosition = Vector2.new(0, 0)
-        
-        -- ВАЖНО: при переходе на MAIN создаем кнопки заново
         createButtons()
     end)
 
@@ -939,6 +1029,28 @@ local function createMenu(player)
             BackgroundColor3 = Color3.fromRGB(255, 200, 0),
             Size = UDim2.new(0, 80, 0, 35)
         }):Play()
+    end)
+
+    -- Обновление монет для DPTB4
+    task.spawn(function()
+        while true do
+            task.wait(2)
+            if selectedGame == "dptb4" then
+                local coinCounter = mainScreen:FindFirstChild("CoinCounter", true)
+                if coinCounter then
+                    coinsList = {}
+                    for _, obj in ipairs(workspace:GetDescendants()) do
+                        if obj:IsA("BasePart") then
+                            local name = obj.Name:lower()
+                            if name == "coin" or name:find("coin") or name == "money" or name:find("money") or name == "gem" or name:find("gem") or name:find("collectible") then
+                                table.insert(coinsList, obj)
+                            end
+                        end
+                    end
+                    coinCounter.Text = "Coins: " .. #coinsList
+                end
+            end
+        end
     end)
 end
 
